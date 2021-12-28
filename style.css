@@ -1,0 +1,12 @@
+#header {
+  height: 10vh;
+  background-color: #48f;
+  text-align: center;
+}
+#header .col-6 {
+  margin: auto;
+}
+#canvas {
+  margin: auto;
+  display: block;
+}
