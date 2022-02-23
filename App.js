@@ -1,18 +1,15 @@
 import { ThemeProvider } from "@emotion/react";
 import AppBar from "@mui/material/AppBar";
-import { createTheme, useTheme } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Find from './Find.js';
-import MainPage from "./MainPage.js";
-import TourPage from './TourPage.js';
 const theme = createTheme({
   palette: {
     primary: {
-      main: "rgb(0,73,144)",
+      main: "rgb(31,59,109)",
     },
   },
 });
@@ -28,10 +25,8 @@ function App() {
       <Router>
         
         <Routes>
-          <Route exact path="" element={<MainPage />} style={{overflow:"hidden"}}/>
-          <Route exact path="/tour" element={<TourPage />} />
-          <Route exact path="/tour/find" element={<Find />} style={{overflowY:"scroll"}}/>
-          <Route exact path="/tour/find/:roomId" element={<Find />} style={{overflowY:"scroll"}}/>
+          <Route exact path="/" element={<Find />} style={{overflowY:"scroll"}}/>
+          <Route exact path="/:roomId" element={<Find />} style={{overflowY:"scroll"}}/>
 
         </Routes>
       </Router>
