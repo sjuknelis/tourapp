@@ -1,7 +1,12 @@
 let canvas,ctx,viewCanvas,viewCtx,map;
-let currentBox = combinedBox(buildingBoxes["Baker"],buildingBoxes["Shattuck"]);
-let nextBox = buildingBoxes["Baker"];
+
+let currentBox = buildingBoxes["Baker"];
+let nextBox = null;
 let transitionTime = 0;
+
+let drawer = Point(40,700);
+let lastPoint = -1;
+let keys = {}
 
 function combinedBox(a,b) {
   let minX = Math.min(a.x,b.x);
@@ -30,8 +35,81 @@ function scaledTransitionBox(a,b,t) {
   );
 }
 
+function clonePoint(p) { return Point(p.x,p.y); }
+
 function redrawView() {
   ctx.drawImage(map,2,2,map.width - 2,map.height - 2,0,0,map.width,map.height);
+
+  if ( location.search == "?drawer" ) {
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(drawer.x,drawer.y,5,0,Math.PI * 2);
+    ctx.fill();
+    if ( keys.KeyW > 0 ) drawer.y -= 5;
+    if ( keys.KeyA > 0 ) drawer.x -= 5;
+    if ( keys.KeyS > 0 ) drawer.y += 5;
+    if ( keys.KeyD > 0 ) drawer.x += 5;
+    if ( keys.Space == 1 ) {
+      keys.Space = 2;
+      points.push(clonePoint(drawer));
+      if ( lastPoint != -1 ) edges.push([lastPoint,points.length - 1]);
+      lastPoint = points.length - 1;
+    }
+    if ( keys.KeyZ == 1 ) {
+      keys.KeyZ = 2;
+      lastPoint--;
+      lastPoint = Math.max(lastPoint,0);
+    }
+    if ( keys.KeyX == 1 ) {
+      keys.KeyX = 2;
+      lastPoint++;
+      lastPoint = Math.min(lastPoint,points.length - 1);
+    }
+
+    ctx.font = "16px Arial";
+    for ( let i in points ) {
+      if ( i != lastPoint ) ctx.fillStyle = "navy";
+      else ctx.fillStyle = "cyan";
+      ctx.beginPath();
+      ctx.arc(points[i].x,points[i].y,5,0,Math.PI * 2);
+      ctx.fill();
+      ctx.fillText(i,points[i].x + 5,points[i].y - 5);
+    }
+    for ( let i in edges ) {
+      ctx.strokeStyle = "navy";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(points[edges[i][0]].x,points[edges[i][0]].y)
+      ctx.lineTo(points[edges[i][1]].x,points[edges[i][1]].y);
+      ctx.stroke();
+    }
+  }
+
+  let edgeMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
+  let distanceMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
+  for ( let i = 0; i < points.length - 1; i++ ) {
+    for ( let j = i + 1; j < points.length; j++ ) {
+      let val = Math.hypot(points[i].x - points[j].x,points[i].y - points[j].y);
+      distanceMatrix[i][j] = val;
+      distanceMatrix[j][i] = val;
+    }
+  }
+  for ( let i in edges ) {
+    let edge = edges[i];
+    let a = edge[0];
+    let b = edge[1];
+    edgeMatrix[a][b] = distanceMatrix[a][b];
+    edgeMatrix[b][a] = distanceMatrix[a][b];
+  }
+  let path = aStar(edgeMatrix,distanceMatrix,roomPoints["Baker 100"],roomPoints["Baker 10D"]);
+  ctx.strokeStyle = "navy";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(points[path[0]].x,points[path[0]].y);
+  for ( let i = 1; i < path.length; i++ ) {
+    ctx.lineTo(points[path[i]].x,points[path[i]].y);
+  }
+  ctx.stroke();
 
   let boxInUse;
   if ( ! nextBox ) {
@@ -72,4 +150,12 @@ window.onload = _ => {
     setInterval(redrawView,25);
   }
   map.src = "map_level1.png";
+}
+
+window.onkeydown = event => {
+  keys[event.code] = 1;
+}
+
+window.onkeyup = event => {
+  keys[event.code] = 0;
 }
