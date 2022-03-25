@@ -6,8 +6,8 @@
 #header .col-6 {
   margin: auto;
 }
-#canvas {
-  height: 90vh;
+#viewCanvas {
+  height: 75vh;
   margin: auto;
   display: block;
   border: 1px solid black;

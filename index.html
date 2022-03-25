@@ -7,34 +7,12 @@
   <link rel="stylesheet" type="text/css" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
   <script src="astar.js"></script>
+  <script src="data.js"></script>
   <script src="script.js"></script>
 </head>
 <body>
   <div class="container-fluid">
-    <div class="row" id="header">
-      <div class="col-6">
-        From:<br />
-        <select id="from" onchange="buildPath()">
-          <option value="0">Stairs (Beach)</option>
-          <option value="10">Baker 009</option>
-          <option value="9">Baker 010</option>
-          <option value="12">Baker 011</option>
-          <option value="6">Stairs (Castle)</option>
-        </select>
-      </div>
-      <div class="col-6">
-        To:<br />
-        <select id="to" onchange="buildPath()">
-          <option value="0">Stairs (Beach)</option>
-          <option value="10">Baker 009</option>
-          <option value="9">Baker 010</option>
-          <option value="12">Baker 011</option>
-          <option value="6">Stairs (Castle)</option>
-        </select>
-      </div>
-    </div>
-    <canvas id="canvas" width="618" height="800"></canvas>
+    <canvas id="viewCanvas" width="500" height="500"></canvas>
   </div>
-  <img id="map" src="map.jpg" style="display: none" />
 </body>
 </html>

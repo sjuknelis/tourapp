@@ -1,39 +1,75 @@
-let canvas,ctx;
-let map;
-let points = [[24.3,49.8],[27.3,49.8],[30.5,49.8],[30.5,39.9],[30.5,37.8],[30.5,27.7],[30.5,20.8],[32.6,39.9],[32.6,37.8],[32.6,36.35],[32.6,41.6],[32.7,27.7],[32.7,29.15]]; let edges = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[3,7],[3,7],[7,8],[8,9],[7,10],[7,10],[5,11],[11,12],[4,8]];
+let canvas,ctx,viewCanvas,viewCtx,map;
+let currentBox = combinedBox(buildingBoxes["Baker"],buildingBoxes["Shattuck"]);
+let nextBox = buildingBoxes["Baker"];
+let transitionTime = 0;
 
-function buildPath() {
-  ctx.drawImage(map,0,0);
-  let edgeMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
-  let distanceMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
-  for ( let i = 0; i < points.length - 1; i++ ) {
-    for ( let j = i + 1; j < points.length; j++ ) {
-      let val = Math.hypot(points[i][0] - points[j][0],points[i][1] - points[j][1]);
-      distanceMatrix[i][j] = val;
-      distanceMatrix[j][i] = val;
-    }
-  }
-  for ( let i in edges ) {
-    let edge = edges[i];
-    let a = edge[0];
-    let b = edge[1];
-    edgeMatrix[a][b] = distanceMatrix[a][b];
-    edgeMatrix[b][a] = distanceMatrix[a][b];
-  }
-  let path = aStar(edgeMatrix,distanceMatrix,parseInt(document.getElementById("from").value),parseInt(document.getElementById("to").value));
-  ctx.strokeStyle = "green";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(points[path[0]][0] * 10,points[path[0]][1] * 10);
-  for ( let i = 1; i < path.length; i++ ) {
-    ctx.lineTo(points[path[i]][0] * 10,points[path[i]][1] * 10);
-  }
-  ctx.stroke();
+function combinedBox(a,b) {
+  let minX = Math.min(a.x,b.x);
+  let maxX = Math.max(a.x + a.w,b.x + b.w);
+  let minY = Math.min(a.y,b.y);
+  let maxY = Math.max(a.y + a.h,b.y + b.h);
+  return Rectangle(
+    minX,
+    minY,
+    maxX - minX,
+    maxY - minY
+  );
 }
 
-window.onload = function() {
-  map = document.getElementById("map");
-  canvas = document.getElementById("canvas");
+function scaledTransitionBox(a,b,t) {
+  t = Math.max(Math.min(t,1),0);
+  let xd = b.x - a.x;
+  let yd = b.y - a.y;
+  let wd = b.w - a.w;
+  let hd = b.h - a.h;
+  return Rectangle(
+    a.x + xd * t,
+    a.y + yd * t,
+    a.w + wd * t,
+    a.h + hd * t,
+  );
+}
+
+function redrawView() {
+  ctx.drawImage(map,2,2,map.width - 2,map.height - 2,0,0,map.width,map.height);
+
+  let boxInUse;
+  if ( ! nextBox ) {
+    boxInUse = currentBox;
+  } else {
+    boxInUse = scaledTransitionBox(currentBox,nextBox,transitionTime / 100);
+    transitionTime += 5;
+    if ( transitionTime >= 100 ) {
+      currentBox = nextBox;
+      nextBox = null;
+      transitionTime = 0;
+    }
+  }
+  viewCtx.clearRect(0,0,canvas.width,canvas.height);
+  let viewDim = Math.max(boxInUse.w,boxInUse.h) + 20;
+  viewCtx.drawImage(
+    canvas,
+    boxInUse.x + (boxInUse.w / 2) - (viewDim / 2),
+    boxInUse.y + (boxInUse.h / 2) - (viewDim / 2),
+    viewDim,
+    viewDim,
+    0,
+    0,
+    viewCanvas.width,
+    viewCanvas.height
+  );
+}
+
+window.onload = _ => {
+  viewCanvas = document.getElementById("viewCanvas");
+  viewCtx = viewCanvas.getContext("2d");
+  canvas = new OffscreenCanvas(1,1);
   ctx = canvas.getContext("2d");
-  ctx.drawImage(map,0,0);
+  map = new Image();
+  map.onload = _ => {
+    canvas.width = map.width;
+    canvas.height = map.height;
+    setInterval(redrawView,25);
+  }
+  map.src = "map_level1.png";
 }
