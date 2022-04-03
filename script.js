@@ -1,8 +1,14 @@
 let canvas,ctx,viewCanvas,viewCtx,map;
 
+let fromFinal = roomPoints["Baker 117"];
+let toFinal = roomPoints["Shattuck Memorial Room"];
+let steps = constructSteps();
+let stepIndex = 0;
+
 let currentBox = buildingBoxes["Baker"];
 let nextBox = null;
 let transitionTime = 0;
+let realCurrentBox,realNextBox;
 
 let drawer = Point(40,700);
 let lastPoint = -1;
@@ -35,7 +41,66 @@ function scaledTransitionBox(a,b,t) {
   );
 }
 
+function calculateRealBox(b) {
+  let wDim,hDim;
+  if ( b.h > b.w ) {
+    hDim = b.h + 40;
+    wDim = hDim * (viewCanvas.width / viewCanvas.height);
+  } else {
+    wDim = b.w + 40;
+    hDim = wDim * (viewCanvas.height / viewCanvas.width);
+  }
+
+  return Rectangle(
+    b.x + (b.w / 2) - (wDim / 2),
+    b.y + (b.h / 2) - (hDim / 2),
+    wDim,
+    hDim
+  );
+}
+
+function buildingOfPoint(p) {
+  for ( let i in buildingBoxes ) {
+    if (
+      p.x >= buildingBoxes[i].x &&
+      p.y >= buildingBoxes[i].y &&
+      p.x <= buildingBoxes[i].x + buildingBoxes[i].w &&
+      p.y <= buildingBoxes[i].y + buildingBoxes[i].h
+    ) return i;
+  }
+}
+
 function clonePoint(p) { return Point(p.x,p.y); }
+
+function getPointPath(from,to) {
+  let edgeMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
+  let distanceMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
+  for ( let i = 0; i < points.length - 1; i++ ) {
+    for ( let j = i + 1; j < points.length; j++ ) {
+      let val = Math.hypot(points[i].x - points[j].x,points[i].y - points[j].y);
+      distanceMatrix[i][j] = val;
+      distanceMatrix[j][i] = val;
+    }
+  }
+  for ( let i in edges ) {
+    let edge = edges[i];
+    let a = edge[0];
+    let b = edge[1];
+    edgeMatrix[a][b] = distanceMatrix[a][b];
+    edgeMatrix[b][a] = distanceMatrix[a][b];
+  }
+  return aStar(edgeMatrix,distanceMatrix,from,to);
+}
+
+function constructSteps() {
+  let path = getPointPath(fromFinal,toFinal);
+  let steps = [fromFinal];
+  for ( let i in path ) {
+    if ( doorPoints.indexOf(path[i]) > -1 ) steps.push(path[i]);
+  }
+  steps.push(toFinal);
+  return steps;
+}
 
 function redrawView() {
   ctx.drawImage(map,2,2,map.width - 2,map.height - 2,0,0,map.width,map.height);
@@ -85,23 +150,7 @@ function redrawView() {
     }
   }
 
-  let edgeMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
-  let distanceMatrix = Array.from(Array(points.length),_ => new Array(points.length).fill(0));
-  for ( let i = 0; i < points.length - 1; i++ ) {
-    for ( let j = i + 1; j < points.length; j++ ) {
-      let val = Math.hypot(points[i].x - points[j].x,points[i].y - points[j].y);
-      distanceMatrix[i][j] = val;
-      distanceMatrix[j][i] = val;
-    }
-  }
-  for ( let i in edges ) {
-    let edge = edges[i];
-    let a = edge[0];
-    let b = edge[1];
-    edgeMatrix[a][b] = distanceMatrix[a][b];
-    edgeMatrix[b][a] = distanceMatrix[a][b];
-  }
-  let path = aStar(edgeMatrix,distanceMatrix,roomPoints["Baker 100"],roomPoints["Baker 10D"]);
+  let path = getPointPath(roomPoints["Baker 100"],roomPoints["Baker 10D"]);
   ctx.strokeStyle = "navy";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -115,32 +164,61 @@ function redrawView() {
   if ( ! nextBox ) {
     boxInUse = currentBox;
   } else {
-    boxInUse = scaledTransitionBox(currentBox,nextBox,transitionTime / 100);
+    boxInUse = scaledTransitionBox(realCurrentBox,realNextBox,transitionTime / 100);
     transitionTime += 5;
     if ( transitionTime >= 100 ) {
       currentBox = nextBox;
+      realCurrentBox = realNextBox;
       nextBox = null;
       transitionTime = 0;
     }
   }
-  viewCtx.clearRect(0,0,canvas.width,canvas.height);
-  let viewDim = Math.max(boxInUse.w,boxInUse.h) + 20;
+  viewCtx.fillStyle = "white";
+  viewCtx.fillRect(0,0,viewCanvas.width,viewCanvas.height);
+  let wDim,hDim;
+  if ( boxInUse.h > boxInUse.w ) {
+    hDim = boxInUse.h + 40;
+    wDim = hDim * (viewCanvas.width / viewCanvas.height);
+  } else {
+    wDim = boxInUse.w + 40;
+    hDim = wDim * (viewCanvas.height / viewCanvas.width);
+  }
   viewCtx.drawImage(
     canvas,
-    boxInUse.x + (boxInUse.w / 2) - (viewDim / 2),
-    boxInUse.y + (boxInUse.h / 2) - (viewDim / 2),
-    viewDim,
-    viewDim,
+    boxInUse.x + (boxInUse.w / 2) - (wDim / 2),
+    boxInUse.y + (boxInUse.h / 2) - (hDim / 2),
+    wDim,
+    hDim,
     0,
     0,
     viewCanvas.width,
     viewCanvas.height
   );
+
+  let instructionText;
+  if ( steps.length == 2 ) {
+    instructionText = "Go to your destination";
+  } else if ( steps.length == 4 ) {
+    if ( stepIndex == 0 ) instructionText = `Leave ${buildingOfPoint(points[fromFinal])}`;
+    else if ( stepIndex == 1 ) instructionText = `Go to ${buildingOfPoint(points[toFinal])}`;
+    else instructionText = "Go to your destination";
+  }
+  document.getElementById("instruction").innerText = `${stepIndex + 1}. ${instructionText}`;
+}
+
+function moveInstruction(move) {
+  stepIndex += move;
+  let fromBuilding = buildingOfPoint(points[steps[stepIndex]]);
+  let toBuilding = buildingOfPoint(points[steps[stepIndex + 1]]);
+  nextBox = combinedBox(buildingBoxes[fromBuilding],buildingBoxes[toBuilding]);
+  realNextBox = calculateRealBox(nextBox);
 }
 
 window.onload = _ => {
   viewCanvas = document.getElementById("viewCanvas");
   viewCtx = viewCanvas.getContext("2d");
+  viewCanvas.width = window.innerWidth;
+  viewCanvas.height = window.innerHeight * 0.8;
   canvas = new OffscreenCanvas(1,1);
   ctx = canvas.getContext("2d");
   map = new Image();
@@ -150,6 +228,8 @@ window.onload = _ => {
     setInterval(redrawView,25);
   }
   map.src = "map_level1.png";
+
+  realCurrentBox = calculateRealBox(currentBox);
 }
 
 window.onkeydown = event => {
