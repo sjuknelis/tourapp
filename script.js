@@ -1,11 +1,12 @@
+let level = 2;
+let buildingBoxes,points,edges,roomPoints,doorPoints,stairPoints;
+
 let canvas,ctx,viewCanvas,viewCtx,map;
 
-let fromFinal = roomPoints["Baker 117"];
-let toFinal = roomPoints["Shattuck Memorial Room"];
-let steps = constructSteps();
+let fromFinal,toFinal,steps;
 let stepIndex = 0;
 
-let currentBox = buildingBoxes["Baker"];
+let currentBox;
 let nextBox = null;
 let transitionTime = 0;
 let realCurrentBox,realNextBox;
@@ -92,14 +93,82 @@ function getPointPath(from,to) {
   return aStar(edgeMatrix,distanceMatrix,from,to);
 }
 
-function constructSteps() {
-  let path = getPointPath(fromFinal,toFinal);
-  let steps = [fromFinal];
-  for ( let i in path ) {
-    if ( doorPoints.indexOf(path[i]) > -1 ) steps.push(path[i]);
+function distanceOfPath(path) {
+  let dist = 0;
+  for ( let i = 0; i < path.length - 1; i++ ) {
+    dist += Math.hypot(points[path[i]].x - points[path[i + 1]].x,points[path[i]].y - points[path[i + 1]].y);
   }
-  steps.push(toFinal);
-  return steps;
+  return dist;
+}
+
+function closestStaircase(origin) {
+  let building = buildingOfPoint(points[origin.point]);
+  let minCandidate = null;
+  let minDist = Number.MAX_VALUE;
+  for ( let i in stairPoints ) {
+    if ( buildingOfPoint(points[stairPoints[i].point]) == building ) {
+      let path = getPointPath(origin.point,stairPoints[i].point);
+      let dist = distanceOfPath(path);
+      if ( dist < minDist ) {
+        minDist = dist;
+        minCandidate = stairPoints[i];
+      }
+    }
+  }
+  return minCandidate;
+}
+
+function constructSteps() {
+  let base = [fromFinal];
+  let mirror = [null];
+
+  let fromPoint = points[fromFinal.point];
+  let toPoint = mapData[toFinal.level].points[toFinal.point];
+  let fromBuilding = buildingOfPoint(fromPoint);
+  let toBuilding = buildingOfPoint(toPoint);
+  if ( fromBuilding == toBuilding ) {
+    let staircase = closestStaircase(fromFinal);
+    base.push({level: level,point: staircase.point});
+    mirror.push({level: toFinal.level,point: staircase.paths[toFinal.level]});
+  } else {
+    let fromGround = fromFinal;
+    if ( fromGround.level != 1 ) {
+      let staircase = closestStaircase(fromFinal);
+      base.push({level: level,point: staircase.point});
+      mirror.push({level: 1,point: staircase.paths[1]});
+      fromGround = staircase;
+    }
+    let toGround = toFinal;
+    let toStaircase = null;
+    if ( toGround.level != 1 ) {
+      level = toGround.level;
+      loadLevelData();
+
+      toStaircase = closestStaircase(toFinal);
+      toGround = toStaircase;
+    }
+
+    level = 1;
+    loadLevelData();
+    let path = getPointPath(fromGround.point,toGround.point);
+    for ( let i in path ) {
+      if ( doorPoints.indexOf(path[i]) > -1 ) {
+        base.push({level: 1,point: path[i]});
+        mirror.push(null);
+      }
+    }
+
+    if ( toStaircase ) {
+      base.push({level: 1,point: toStaircase.paths[1]});
+      mirror.push({level: toFinal.level,point: toStaircase.point});
+    }
+    level = fromFinal.level;
+    loadLevelData();
+  }
+
+  base.push(toFinal);
+  mirror.push(null);
+  return {base,mirror};
 }
 
 function redrawView() {
@@ -150,16 +219,6 @@ function redrawView() {
     }
   }
 
-  let path = getPointPath(roomPoints["Baker 100"],roomPoints["Baker 10D"]);
-  ctx.strokeStyle = "navy";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(points[path[0]].x,points[path[0]].y);
-  for ( let i = 1; i < path.length; i++ ) {
-    ctx.lineTo(points[path[i]].x,points[path[i]].y);
-  }
-  ctx.stroke();
-
   let boxInUse;
   if ( ! nextBox ) {
     boxInUse = currentBox;
@@ -183,6 +242,31 @@ function redrawView() {
     wDim = boxInUse.w + 40;
     hDim = wDim * (viewCanvas.height / viewCanvas.width);
   }
+
+  if ( location.search != "?drawer" ) {
+    let fromPoint = steps.base[stepIndex];
+    if ( fromPoint.level != steps.base[stepIndex + 1].level ) fromPoint = steps.mirror[stepIndex];
+    let path = getPointPath(fromPoint.point,steps.base[stepIndex + 1].point);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = (5 / 696) * Math.max(wDim,hDim);
+    ctx.beginPath();
+    ctx.moveTo(points[path[0]].x,points[path[0]].y);
+    for ( let i = 1; i < path.length; i++ ) {
+      ctx.lineTo(points[path[i]].x,points[path[i]].y);
+    }
+    ctx.stroke();
+
+    /*let instructionText;
+    if ( steps.length == 2 ) {
+      instructionText = "Go to your destination";
+    } else if ( steps.length == 4 ) {
+      if ( stepIndex == 0 ) instructionText = `Leave ${buildingOfPoint(points[fromFinal])}`;
+      else if ( stepIndex == 1 ) instructionText = `Go to ${buildingOfPoint(points[toFinal])}`;
+      else instructionText = "Go to your destination";
+    }
+    document.getElementById("instruction").innerText = `${stepIndex + 1}. ${instructionText}`;*/
+  }
+
   viewCtx.drawImage(
     canvas,
     boxInUse.x + (boxInUse.w / 2) - (wDim / 2),
@@ -194,27 +278,53 @@ function redrawView() {
     viewCanvas.width,
     viewCanvas.height
   );
-
-  let instructionText;
-  if ( steps.length == 2 ) {
-    instructionText = "Go to your destination";
-  } else if ( steps.length == 4 ) {
-    if ( stepIndex == 0 ) instructionText = `Leave ${buildingOfPoint(points[fromFinal])}`;
-    else if ( stepIndex == 1 ) instructionText = `Go to ${buildingOfPoint(points[toFinal])}`;
-    else instructionText = "Go to your destination";
-  }
-  document.getElementById("instruction").innerText = `${stepIndex + 1}. ${instructionText}`;
 }
 
 function moveInstruction(move) {
+  if ( stepIndex <= 0 && move == -1 ) return;
+  if ( stepIndex >= steps.base.length - 2 && move == 1 ) return;
   stepIndex += move;
-  let fromBuilding = buildingOfPoint(points[steps[stepIndex]]);
-  let toBuilding = buildingOfPoint(points[steps[stepIndex + 1]]);
+
+  let quickChangeBox = false;
+  let fromPoint = steps.base[stepIndex];
+  let toPoint = steps.base[stepIndex + 1];
+  if ( level != toPoint.level ) {
+    if ( fromPoint.level != toPoint.level ) fromPoint = steps.mirror[stepIndex];
+    level = toPoint.level;
+    loadLevelData();
+    map.src = `map_level${level}.png`;
+    quickChangeBox = true;
+  }
+
+  let fromBuilding = buildingOfPoint(points[fromPoint.point]);
+  let toBuilding = buildingOfPoint(points[toPoint.point]);
   nextBox = combinedBox(buildingBoxes[fromBuilding],buildingBoxes[toBuilding]);
   realNextBox = calculateRealBox(nextBox);
+  if ( quickChangeBox ) {
+    currentBox = nextBox;
+    realCurrentBox = realNextBox;
+    nextBox = null;
+  }
+}
+
+function loadLevelData() {
+  let levelData = mapData[level];
+  buildingBoxes = levelData.buildingBoxes;
+  points = levelData.points;
+  edges = levelData.edges;
+  roomPoints = levelData.roomPoints;
+  doorPoints = levelData.doorPoints;
+  stairPoints = levelData.stairPoints;
 }
 
 window.onload = _ => {
+  loadLevelData();
+
+  fromFinal = {level: 2,point: roomPoints["Baker 217"]};
+  toFinal = {level: 2,point: roomPoints["Shattuck 2 Memorial Room"]};
+  currentBox = buildingBoxes["Baker"];
+  steps = constructSteps();
+
   viewCanvas = document.getElementById("viewCanvas");
   viewCtx = viewCanvas.getContext("2d");
   viewCanvas.width = window.innerWidth;
@@ -227,7 +337,7 @@ window.onload = _ => {
     canvas.height = map.height;
     setInterval(redrawView,25);
   }
-  map.src = "map_level1.png";
+  map.src = `map_level${level}.png`;
 
   realCurrentBox = calculateRealBox(currentBox);
 }
