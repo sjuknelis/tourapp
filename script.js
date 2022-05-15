@@ -5,6 +5,8 @@ let canvas,ctx,viewCanvas,viewCtx,map;
 
 let fromFinal,toFinal,steps;
 let stepIndex = 0;
+let modalFromSelected = false;
+let navigationOn = false;
 
 let currentBox;
 let nextBox = null;
@@ -252,7 +254,7 @@ function redrawView() {
     hDim = wDim * (viewCanvas.height / viewCanvas.width);
   }
 
-  if ( location.search != "?drawer" ) {
+  if ( navigationOn ) {
     let fromPoint = steps.base[stepIndex];
     if ( fromPoint.level != steps.base[stepIndex + 1].level ) fromPoint = steps.mirror[stepIndex];
     let path = getPointPath(fromPoint.point,steps.base[stepIndex + 1].point);
@@ -318,13 +320,57 @@ function loadLevelData() {
   stairPoints = levelData.stairPoints;
 }
 
+function openRouteSelect() {
+  let items = Array.from(document.getElementById("route-select-list").children);
+  for ( let i in items ) {
+    items[i].classList.remove("active");
+  }
+  $("#route-select").modal("show");
+}
+
 window.onload = _ => {
   loadLevelData();
+  currentBox = combinedBox(buildingBoxes["Baker"],buildingBoxes["Shattuck"]);
 
-  fromFinal = {level: 2,point: roomPoints["Baker 217"]};
-  toFinal = {level: 1,point: mapData[1].roomPoints["Shattuck Memorial Room"]};
-  currentBox = buildingBoxes["Baker"];
-  steps = constructSteps();
+  let places = [];
+  let placeLevels = [];
+  for ( let i in mapData ) {
+    if ( ! mapData[i] ) continue;
+    places = places.concat(Object.keys(mapData[i].roomPoints).map(name => {return {name,level: i}}));
+  }
+  places.sort((a,b) => a.name.localeCompare(b.name));
+  let list = document.getElementById("route-select-list");
+  for ( let i in places ) {
+    let item = document.createElement("button");
+    item.className = "list-group-item list-group-item-action";
+    item.innerText = places[i].name;
+    item.dataset.level = places[i].level;
+    item.onclick = function() {
+      if ( ! modalFromSelected ) {
+        let point = mapData[this.dataset.level].roomPoints[this.innerText];
+        fromFinal = {level: this.dataset.level,point,name: this.innerText};
+        this.classList.add("active");
+        modalFromSelected = true;
+        document.getElementById("route-select-header").innerText = "Select destination";
+      } else {
+        let point = mapData[this.dataset.level].roomPoints[this.innerText];
+        toFinal = {level: this.dataset.level,point};
+        this.classList.add("active");
+        level = fromFinal.level;
+        loadLevelData();
+        map.src = `map_level${level}.png`;
+        currentBox = buildingBoxes[buildingOfPoint(points[fromFinal.point])];
+        realCurrentBox = calculateRealBox(currentBox);
+        steps = constructSteps();
+        stepIndex = 0;
+        document.getElementById("route-select-link").innerHTML = `${fromFinal.name} &#x2192; ${this.innerText}`;
+        $("#route-select").modal("hide");
+        navigationOn = true;
+        modalFromSelected = false;
+      }
+    }
+    list.appendChild(item);
+  }
 
   viewCanvas = document.getElementById("viewCanvas");
   viewCtx = viewCanvas.getContext("2d");
