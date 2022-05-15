@@ -121,15 +121,19 @@ function closestStaircase(origin) {
 function constructSteps() {
   let base = [fromFinal];
   let mirror = [null];
+  let instructions = [];
 
   let fromPoint = points[fromFinal.point];
   let toPoint = mapData[toFinal.level].points[toFinal.point];
   let fromBuilding = buildingOfPoint(fromPoint);
   let toBuilding = buildingOfPoint(toPoint);
   if ( fromBuilding == toBuilding ) {
-    let staircase = closestStaircase(fromFinal);
-    base.push({level: level,point: staircase.point});
-    mirror.push({level: toFinal.level,point: staircase.paths[toFinal.level]});
+    if ( fromFinal.level != toFinal.level ) {
+      let staircase = closestStaircase(fromFinal);
+      base.push({level: level,point: staircase.point});
+      mirror.push({level: toFinal.level,point: staircase.paths[toFinal.level]});
+      instructions.push(`Go to level ${toFinal.level}`);
+    }
   } else {
     let fromGround = fromFinal;
     if ( fromGround.level != 1 ) {
@@ -137,6 +141,7 @@ function constructSteps() {
       base.push({level: level,point: staircase.point});
       mirror.push({level: 1,point: staircase.paths[1]});
       fromGround = staircase;
+      instructions.push("Go to level 1");
     }
     let toGround = toFinal;
     let toStaircase = null;
@@ -157,10 +162,13 @@ function constructSteps() {
         mirror.push(null);
       }
     }
+    instructions.push(`Leave ${fromBuilding}`);
+    instructions.push(`Go to ${toBuilding}`);
 
     if ( toStaircase ) {
       base.push({level: 1,point: toStaircase.paths[1]});
       mirror.push({level: toFinal.level,point: toStaircase.point});
+      instructions.push(`Go to level ${toFinal.level}`);
     }
     level = fromFinal.level;
     loadLevelData();
@@ -168,7 +176,8 @@ function constructSteps() {
 
   base.push(toFinal);
   mirror.push(null);
-  return {base,mirror};
+  instructions.push("Go to the destination");
+  return {base,mirror,instructions};
 }
 
 function redrawView() {
@@ -256,15 +265,7 @@ function redrawView() {
     }
     ctx.stroke();
 
-    /*let instructionText;
-    if ( steps.length == 2 ) {
-      instructionText = "Go to your destination";
-    } else if ( steps.length == 4 ) {
-      if ( stepIndex == 0 ) instructionText = `Leave ${buildingOfPoint(points[fromFinal])}`;
-      else if ( stepIndex == 1 ) instructionText = `Go to ${buildingOfPoint(points[toFinal])}`;
-      else instructionText = "Go to your destination";
-    }
-    document.getElementById("instruction").innerText = `${stepIndex + 1}. ${instructionText}`;*/
+    document.getElementById("instruction").innerText = `${stepIndex + 1}. ${steps.instructions[stepIndex]}`;
   }
 
   viewCtx.drawImage(
@@ -321,7 +322,7 @@ window.onload = _ => {
   loadLevelData();
 
   fromFinal = {level: 2,point: roomPoints["Baker 217"]};
-  toFinal = {level: 2,point: roomPoints["Shattuck 2 Memorial Room"]};
+  toFinal = {level: 1,point: mapData[1].roomPoints["Shattuck Memorial Room"]};
   currentBox = buildingBoxes["Baker"];
   steps = constructSteps();
 
