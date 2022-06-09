@@ -17,6 +17,9 @@ let drawer = Point(40,700);
 let lastPoint = -1;
 let keys = {}
 
+const BUFFER = 1000;
+let maps = [null,null,null];
+
 function combinedBox(a,b) {
   let minX = Math.min(a.x,b.x);
   let maxX = Math.max(a.x + a.w,b.x + b.w);
@@ -182,13 +185,17 @@ function constructSteps() {
   return {base,mirror,instructions};
 }
 
+let frameCnt = 0;
 function redrawView() {
-  ctx.drawImage(map,2,2,map.width - 2,map.height - 2,0,0,map.width,map.height);
+  //console.log("frame" + frameCnt++);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(maps[level],2,2,maps[level].width - 2,maps[level].height - 2,BUFFER,BUFFER,maps[level].width,maps[level].height);
 
   if ( location.search == "?drawer" ) {
     ctx.fillStyle = "red";
     ctx.beginPath();
-    ctx.arc(drawer.x,drawer.y,5,0,Math.PI * 2);
+    ctx.arc(BUFFER + drawer.x,BUFFER + drawer.y,5,0,Math.PI * 2);
     ctx.fill();
     if ( keys.KeyW > 0 ) drawer.y -= 5;
     if ( keys.KeyA > 0 ) drawer.x -= 5;
@@ -216,16 +223,16 @@ function redrawView() {
       if ( i != lastPoint ) ctx.fillStyle = "navy";
       else ctx.fillStyle = "cyan";
       ctx.beginPath();
-      ctx.arc(points[i].x,points[i].y,5,0,Math.PI * 2);
+      ctx.arc(BUFFER + points[i].x,BUFFER + points[i].y,5,0,Math.PI * 2);
       ctx.fill();
-      ctx.fillText(i,points[i].x + 5,points[i].y - 5);
+      ctx.fillText(i,BUFFER + points[i].x + 5,BUFFER + points[i].y - 5);
     }
     for ( let i in edges ) {
       ctx.strokeStyle = "navy";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(points[edges[i][0]].x,points[edges[i][0]].y)
-      ctx.lineTo(points[edges[i][1]].x,points[edges[i][1]].y);
+      ctx.moveTo(BUFFER + points[edges[i][0]].x,BUFFER + points[edges[i][0]].y)
+      ctx.lineTo(BUFFER + points[edges[i][1]].x,BUFFER + points[edges[i][1]].y);
       ctx.stroke();
     }
   }
@@ -235,7 +242,7 @@ function redrawView() {
     boxInUse = currentBox;
   } else {
     boxInUse = scaledTransitionBox(realCurrentBox,realNextBox,transitionTime / 100);
-    transitionTime += 5;
+    transitionTime = 100;//transitionTime += 5;
     if ( transitionTime >= 100 ) {
       currentBox = nextBox;
       realCurrentBox = realNextBox;
@@ -261,9 +268,9 @@ function redrawView() {
     ctx.strokeStyle = "red";
     ctx.lineWidth = (5 / 696) * Math.max(wDim,hDim);
     ctx.beginPath();
-    ctx.moveTo(points[path[0]].x,points[path[0]].y);
+    ctx.moveTo(BUFFER + points[path[0]].x,BUFFER + points[path[0]].y);
     for ( let i = 1; i < path.length; i++ ) {
-      ctx.lineTo(points[path[i]].x,points[path[i]].y);
+      ctx.lineTo(BUFFER + points[path[i]].x,BUFFER + points[path[i]].y);
     }
     ctx.stroke();
 
@@ -272,8 +279,8 @@ function redrawView() {
 
   viewCtx.drawImage(
     canvas,
-    boxInUse.x + (boxInUse.w / 2) - (wDim / 2),
-    boxInUse.y + (boxInUse.h / 2) - (hDim / 2),
+    BUFFER + boxInUse.x + (boxInUse.w / 2) - (wDim / 2),
+    BUFFER + boxInUse.y + (boxInUse.h / 2) - (hDim / 2),
     wDim,
     hDim,
     0,
@@ -281,6 +288,8 @@ function redrawView() {
     viewCanvas.width,
     viewCanvas.height
   );
+
+  //window.requestAnimationFrame(redrawView);
 }
 
 function moveInstruction(move) {
@@ -288,14 +297,13 @@ function moveInstruction(move) {
   if ( stepIndex >= steps.base.length - 2 && move == 1 ) return;
   stepIndex += move;
 
-  let quickChangeBox = false;
+  let quickChangeBox = true;
   let fromPoint = steps.base[stepIndex];
   let toPoint = steps.base[stepIndex + 1];
   if ( level != toPoint.level ) {
     if ( fromPoint.level != toPoint.level ) fromPoint = steps.mirror[stepIndex];
     level = toPoint.level;
     loadLevelData();
-    map.src = `map_level${level}.png`;
     quickChangeBox = true;
   }
 
@@ -308,6 +316,8 @@ function moveInstruction(move) {
     realCurrentBox = realNextBox;
     nextBox = null;
   }
+
+  redrawView();
 }
 
 function loadLevelData() {
@@ -358,15 +368,15 @@ window.onload = _ => {
         this.classList.add("active");
         level = fromFinal.level;
         loadLevelData();
-        map.src = `map_level${level}.png`;
         currentBox = buildingBoxes[buildingOfPoint(points[fromFinal.point])];
         realCurrentBox = calculateRealBox(currentBox);
         steps = constructSteps();
         stepIndex = 0;
-        document.getElementById("route-select-link").innerHTML = `${fromFinal.name} &#x2192; ${this.innerText}`;
+        document.getElementById("route-select-link").innerHTML = `${fromFinal.name.split(" ").join("&nbsp;")} &#x2192; ${this.innerText.split(" ").join("&nbsp;")}`;
         $("#route-select").modal("hide");
         navigationOn = true;
         modalFromSelected = false;
+        redrawView();
       }
     }
     list.appendChild(item);
@@ -376,15 +386,19 @@ window.onload = _ => {
   viewCtx = viewCanvas.getContext("2d");
   viewCanvas.width = window.innerWidth;
   viewCanvas.height = window.innerHeight * 0.8;
-  canvas = new OffscreenCanvas(1,1);
+  canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
-  map = new Image();
-  map.onload = _ => {
-    canvas.width = map.width;
-    canvas.height = map.height;
-    setInterval(redrawView,25);
+  maps[2] = new Image();
+  maps[2].onload = _ => {
+    maps[1] = new Image();
+    maps[1].onload = _ => {
+      canvas.width = maps[1].width + 2 * BUFFER;
+      canvas.height = maps[1].height + 2 * BUFFER;
+      redrawView();
+    }
+    maps[1].src = "map_level1.png";
   }
-  map.src = `map_level${level}.png`;
+  maps[2].src = "map_level2.png";
 
   realCurrentBox = calculateRealBox(currentBox);
 }

@@ -5,6 +5,7 @@ html,body {
   background-color: skyblue;
   font-family: "Nunito Sans";
   font-weight: bold;
+  overflow: none;
 }
 #viewCanvas {
   display: block;
