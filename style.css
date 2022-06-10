@@ -5,11 +5,15 @@ html,body {
   background-color: skyblue;
   font-family: "Nunito Sans";
   font-weight: bold;
-  overflow: none;
+  height: 100%;
+  overflow: hidden;
 }
 #viewCanvas {
   display: block;
   border-radius: 20px;
+}
+#route-select-link {
+  text-decoration: underline;
 }
 #route-select-list {
   overflow-y: scroll;
@@ -17,7 +21,7 @@ html,body {
 }
 .bar {
   width: 100vw;
-  height: 10vh;
+  height: 9vh;
   background-color: skyblue;
   text-align: center;
   display: flex;
@@ -37,4 +41,7 @@ html,body {
 }
 .bar *:not(:nth-child(2)) {
   padding: 0.5em;
+}
+a:active {
+  color: red;
 }

@@ -338,6 +338,11 @@ function openRouteSelect() {
   $("#route-select").modal("show");
 }
 
+function clearModalSelection() {
+  modalFromSelected = null;
+  document.getElementById("route-select-header").innerText = "Select origin";
+}
+
 window.onload = _ => {
   loadLevelData();
   currentBox = combinedBox(buildingBoxes["Baker"],buildingBoxes["Shattuck"]);
@@ -373,6 +378,7 @@ window.onload = _ => {
         steps = constructSteps();
         stepIndex = 0;
         document.getElementById("route-select-link").innerHTML = `${fromFinal.name.split(" ").join("&nbsp;")} &#x2192; ${this.innerText.split(" ").join("&nbsp;")}`;
+        document.getElementById("route-select-link").style.textDecoration = "none";
         $("#route-select").modal("hide");
         navigationOn = true;
         modalFromSelected = false;
