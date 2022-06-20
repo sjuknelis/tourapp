@@ -1,4 +1,4 @@
-let level = 2;
+let level = 1;
 let buildingBoxes,points,edges,roomPoints,doorPoints,stairPoints;
 
 let canvas,ctx,viewCanvas,viewCtx,map;

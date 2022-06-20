@@ -15,9 +15,23 @@ html,body {
 #route-select-link {
   text-decoration: underline;
 }
+.modal-body {
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 0 !important;
+}
 #route-select-list {
   overflow-y: scroll;
   height: calc(100vh - 13em);
+}
+.list-group-item:first-child,.list-group-item:last-child {
+  border-radius: 0;
+}
+.list-group-item:first-child {
+  border-top: 0;
+}
+.list-group-item:last-child {
+  border-bottom: 0;
 }
 .bar {
   width: 100vw;
@@ -35,6 +49,9 @@ html,body {
 }
 .bar a {
   color: black;
+}
+.bar a:link {
+  text-decoration: none;
 }
 .bar *:nth-child(2) {
   flex-grow: 3;
