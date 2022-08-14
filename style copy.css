@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap');
+html,body {
+  margin: 0;
+  padding: 0;
+  background-color: rgb(25,61,119);
+  color: white;
+  font-family: "EB Garamond";
+  font-weight: bold;
+  height: 100%;
+  padding:
+    env(safe-area-inset-top, 20px)
+    env(safe-area-inset-right, 20px)
+    env(safe-area-inset-bottom, 20px)
+    env(safe-area-inset-left, 20px);
+}
+button {
+  background-color: white;
+  color: rgb(25,61,119);
+  border: 0;
+  font-family: "EB Garamond";
+  border-radius: 10px;
+}
+#canvasBox {
+  overflow: hidden;
+  height: calc(100% - 18vh);
+  border-radius: 20px;
+}
+#canvas {
+  display: block;
+  transform: translate(-1000px,-1000px);
+}
+.bar {
+  width: 100vw;
+  height: 9vh;
+  background-color: rgb(25,61,119);
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+}
+.bar * {
+  margin: auto;
+  font-size: 2.5vh;
+  text-decoration: none;
+}
+.bar *:nth-child(2) {
+  flex-grow: 1;
+}
+.bar *:not(:nth-child(2)) {
+  padding: 0.5em;
+}

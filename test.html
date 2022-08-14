@@ -1,0 +1,21 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Document</title>
+  <style>
+    @supports(padding:max(0px)) {
+        body, header, footer {
+            --inset: env(safe-area-inset-bottom);
+        }
+    }
+    #hi {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  <p id="hi">hi</p>
+</body>
+</html>

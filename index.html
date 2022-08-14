@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"> 
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Tour App</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   <script>
     function Point(x,y) { return {x,y}; }
     function Rectangle(x,y,w,h) { return {x,y,w,h}; }
@@ -19,32 +16,23 @@
 </head>
 <body>
   <div class="bar">
-    <a id="route-select-link" href="javascript: openRouteSelect()">Tap to select route</a>
+    <button onclick="setSelectorOpen(true)">Change route</button>
   </div>
-  <canvas id="viewCanvas">no canvas support</canvas>
-  <canvas id="canvas" style="display: none">no canvas support</canvas>
-  <div class="bar">
-    <a href="javascript: moveInstruction(-1)">&#x2190;</a>
+  <div id="canvasBox">
+    <canvas id="canvas">no canvas support</canvas>
+  </div>
+  <div id="bottomBar" class="bar">
+    <button id="leftArrow" class="arrow" onclick="moveInstruction(-1)">&#x2190;</button>
     <p id="instruction"></p>
-    <a href="javascript: moveInstruction(1)">&#x2192;</a>
+    <button id="rightArrow" class="arrow" onclick=" moveInstruction(1)">&#x2192;</button>
   </div>
-
-  <div class="modal fade" id="route-select" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="route-select-header">Select origin</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="clearModalSelection()">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div id="route-select-list" class="list-group"></div>
-        </div>
-        <div class="modal-footer">
-        </div>
-      </div>
-    </div>
+  <div id="routeSelector" class="hidden">
+    <div id="topHeader" class="bigHeader">Select route</div>
+    <div id="routeSelectorTable"></div>
+  </div>
+  <div id="disable">
+    <p id="disableLandscape">Sorry, the Nobles map is not compatible with landscape mode. Please put your phone in portrait mode.</p>
+    <p id="disableDesktop">Sorry, the Nobles map is only compatible with mobile devices. Please open this link on your phone.</p>
   </div>
 </body>
 </html>

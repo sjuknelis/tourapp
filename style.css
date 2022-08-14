@@ -1,42 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap');
 html,body {
   margin: 0;
-  padding: 0;
-  background-color: skyblue;
-  font-family: "Nunito Sans";
+  background-color: rgb(25,61,119);
+  color: white;
+  font-family: "EB Garamond";
   font-weight: bold;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
 }
-#viewCanvas {
+button {
+  background-color: white;
+  color: rgb(25,61,119);
+  border: 0;
+  font-family: "EB Garamond";
+  border-radius: 10px;
+}
+
+#canvasBox {
+  overflow: hidden;
+  height: 50vh;
+}
+#canvas {
   display: block;
-  border-radius: 20px;
+  transform: translate(-1000px,-1000px) scale(.5);
 }
-#route-select-link {
-  text-decoration: underline;
-}
-.modal-body {
-  padding-top: 0;
-  padding-bottom: 0;
-  border: 0 !important;
-}
-#route-select-list {
-  overflow-y: scroll;
-  height: calc(100vh - 13em);
-}
-.list-group-item:first-child,.list-group-item:last-child {
-  border-radius: 0;
-}
-.list-group-item:first-child {
-  border-top: 0;
-}
-.list-group-item:last-child {
-  border-bottom: 0;
-}
+
 .bar {
   width: 100vw;
   height: 9vh;
-  background-color: skyblue;
+  background-color: rgb(25,61,119);
   text-align: center;
   display: flex;
   flex-direction: row;
@@ -44,21 +36,145 @@ html,body {
 .bar * {
   margin: auto;
   font-size: 2.5vh;
-  color: black;
-  text-decoration: none;
-}
-.bar a {
-  color: black;
-}
-.bar a:link {
   text-decoration: none;
 }
 .bar *:nth-child(2) {
-  flex-grow: 3;
+  flex-grow: 1;
 }
 .bar *:not(:nth-child(2)) {
-  padding: 0.5em;
+  padding: .5em;
 }
-a:active {
-  color: red;
+.bar button.arrow {
+  margin: .5em;
+  touch-action: manipulation;
+}
+.bar button.arrow.hidden {
+  opacity: 0;
+}
+#bottomBar {
+  position: fixed;
+  bottom: 0;
+}
+
+#routeSelector {
+  position: absolute;
+  top: 100vh;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  padding:
+    env(safe-area-inset-top, 20px)
+    env(safe-area-inset-right, 20px)
+    env(safe-area-inset-bottom, 20px)
+    0;
+  background-color: white;
+  color: rgb(25,61,119);
+  transform: translateY(0);
+  transition: transform 1s;
+  -webkit-transition: translateZ(0);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#routeSelector.open {
+  transform: translateY(-100vh);
+}
+#routeSelector.hidden {
+  display: none;
+  transform: translateY(0);
+}
+#routeSelectorTable {
+  flex: 1;
+  width: calc(100% - 40px);
+  overflow: scroll;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-bottom: 40px;
+}
+#routeSelectorTable div.row {
+  display: flex;
+}
+#routeSelectorTable div.row div {
+  flex: 1;
+}
+#routeSelectorTable div.pad {
+  height: 50px;
+  border-top: 1px solid rgb(25,61,119);
+}
+#routeSelectorTable div:not(.hidden) {
+  font-size: 2.5vh;
+  text-align: center;
+}
+#routeSelector div.bigHeader {
+  width: calc(100% - 40px);
+  margin-top: 20px;
+  margin-left: 20px;
+  font-weight: bold;
+  font-size: 200%;
+  text-align: center;
+}
+#routeSelectorTable div.header {
+  font-weight: bold;
+  font-size: 125%;
+}
+#routeSelectorTable div.selectionBox,#routeSelectorTable div.hidden {
+  width: 50%;
+  padding: 5px;
+}
+#routeSelectorTable button.selection {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgb(25,61,119);
+  font-size: 100%;
+  padding: 5px;
+  transition: background-color .2s;
+}
+#routeSelectorTable button.selected {
+  background-color: rgb(25,61,119);
+  color: white;
+}
+#routeSelectorTable button.origin::after {
+  content: "Origin";
+  text-decoration: underline;
+  display: block;
+}
+#routeSelectorTable button.destination::after {
+  content: "Destination";
+  text-decoration: underline;
+  display: block;
+}
+
+#disable {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  background-color: white;
+  color: rgb(25,61,119);
+  text-align: center;
+}
+#disableLandscape,#disableDesktop {
+  display: none;
+}
+@media (orientation: landscape),(min-width: 600px) {
+  #disable {
+    display: block;
+  }
+  #routeSelector {
+    display: none !important;
+  }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  #disableLandscape {
+    display: block;
+  }
+}
+@media (orientation: portrait) and (min-width: 600px),(orientation: landscape) and (min-height: 600px) {
+  #disableDesktop {
+    display: block;
+  }
 }
