@@ -1,4 +1,5 @@
 let mapKey,building,level,points,edges,roomPoints,doorPoints,stairPoints,arcs;
+let translatedPoints;
 let canvas,ctx,map;
 
 let fromFinal,toFinal,steps;
@@ -15,7 +16,7 @@ let lineDashTick = 0;
 
 const KEY_COLOR = "rgb(25,61,119)";
 const BUFFER = 1000;
-const GLOBAL_SCALE = 2;
+const GLOBAL_SCALE = 1;
 
 let drawer = Point(0,0);
 let lastPoint = -1;
@@ -210,13 +211,6 @@ function redrawView() {
     imageWidth,
     imageHeight
   );
-
-  const translatedPoints = points.map(item => clonePoint(item));
-  const refImage = mapDimsForViewDims(390,675,1);
-  for ( const i in translatedPoints ) {
-    translatedPoints[i].x = (translatedPoints[i].x - refImage.imageCenterX) / refImage.imageWidth * imageWidth + imageCenterX;
-    translatedPoints[i].y = (translatedPoints[i].y - refImage.imageCenterY) / refImage.imageHeight * imageHeight + imageCenterY;
-  }
 
   if ( location.search == "?drawer" ) {
     ctx.fillStyle = "red";
@@ -535,6 +529,20 @@ function loadActiveMapData(newMapKey) {
   doorPoints = activeMapData.doorPoints;
   stairPoints = activeMapData.stairPoints;
   arcs = activeMapData.arcs || [];
+
+  // this might need to be recalculated on change
+  canvas.width = screen.availWidth + BUFFER * 2;
+  canvas.height = document.getElementById("bottomBar").offsetTop - document.getElementById("canvasBox").offsetTop + BUFFER * 2;
+  document.getElementById("canvasBox").style.height = `${document.getElementById("bottomBar").offsetTop - document.getElementById("canvasBox").offsetTop}px`;
+  const viewWidth = canvas.width - BUFFER * 2;
+  const viewHeight = canvas.height - BUFFER * 2;
+  const {imageX,imageY,imageWidth,imageHeight,imageCenterX,imageCenterY} = mapDimsForViewDims(viewWidth,viewHeight,GLOBAL_SCALE);
+  translatedPoints = points.map(item => clonePoint(item));
+  const refImage = mapDimsForViewDims(390,675,1);
+  for ( const i in translatedPoints ) {
+    translatedPoints[i].x = (translatedPoints[i].x - refImage.imageCenterX) / refImage.imageWidth * imageWidth + imageCenterX;
+    translatedPoints[i].y = (translatedPoints[i].y - refImage.imageCenterY) / refImage.imageHeight * imageHeight + imageCenterY;
+  }
 }
 
 function loadMaps(mapList,callback) {

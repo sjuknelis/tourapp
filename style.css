@@ -22,7 +22,7 @@ button {
 }
 #canvas {
   display: block;
-  transform: translate(-1000px,-1000px) scale(.5);
+  transform: translate(-1000px,-1000px) scale(1);
 }
 
 .bar {
@@ -112,6 +112,7 @@ button {
   font-weight: bold;
   font-size: 200%;
   text-align: center;
+  border-bottom: 1px solid rgb(25,61,119);
 }
 #routeSelectorTable div.header {
   font-weight: bold;
