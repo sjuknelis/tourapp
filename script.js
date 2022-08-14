@@ -16,7 +16,7 @@ let lineDashTick = 0;
 
 const KEY_COLOR = "rgb(25,61,119)";
 const BUFFER = 1000;
-const GLOBAL_SCALE = 1;
+const GLOBAL_SCALE = 1.4;
 
 let drawer = Point(0,0);
 let lastPoint = -1;

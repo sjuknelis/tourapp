@@ -22,7 +22,7 @@ button {
 }
 #canvas {
   display: block;
-  transform: translate(-1000px,-1000px) scale(1);
+  transform: translate(-1000px,-1000px) scale(calc(1 / 1.4));
 }
 
 .bar {
