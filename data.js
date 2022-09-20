@@ -24,7 +24,7 @@ const mapData = {
       "AC 10H (Study Room)": 16,
       "AC 10I (Study Room)": 17,
       "AC 10J (Study Room)": 18,
-      "Library": 10
+      "Entrance towards Baker": 26
     },
     doorPoints: [
       {inside: 11,outside: 13},
@@ -95,7 +95,9 @@ const mapData = {
       "Shattuck 126": 21,
       "Shattuck 127": 45,
       "Shattuck 128": 47,
-      "Shattuck 131 (Learning Center)": 26
+      "Shattuck 131 (Learning Center)": 26,
+      "Entrance towards the Beach": 57,
+      "Entrance towards Library": 0
     },
     doorPoints: [
       {inside: 0,outside: 10},
@@ -414,7 +416,8 @@ const mapData = {
       "Baker 10B": 10,
       "Baker 10C": 12,
       "Baker 10D": 14,
-      "Baker - Towles": 18,
+      "Towles Auditorium": 18,
+      "Main Entrance": 0
     },
     doorPoints: [
       {inside: 0,outside: 2}
